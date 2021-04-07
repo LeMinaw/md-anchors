@@ -29,3 +29,7 @@ jobs:
         python -m pip install tox tox-gh-actions
     - name: Lint and run tests with Tox
       run: python -m tox
+    - name: "Upload coverage to Codecov"
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
