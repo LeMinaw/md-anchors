@@ -26,10 +26,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install tox tox-gh-actions
-    - name: Lint and run tests with Tox
+        python -m pip install tox tox-gh-actions coveragepy
+    - name: Run linter and tests with Tox
       run: python -m tox
-    - name: "Upload coverage to Codecov"
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
         fail_ci_if_error: true
