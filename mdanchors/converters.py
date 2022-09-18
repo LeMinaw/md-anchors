@@ -20,7 +20,7 @@ class AnchorConverter:
     # Match inline anchors identifiers
     anchors_exp = re.compile(r'\[[^()[\]]*\]\s?\[([^()[\]]+)\]')
     # Match reference-style anchors
-    references_exp = re.compile(r'^\s*\[([^()[\]]+)\]\s*:.*$', re.M)
+    references_exp = re.compile(r'^\s*\[([^()[\]]+)\]\s*:(.*)$', re.M)
 
     def __init__(self, text):
         self.text = text
@@ -34,7 +34,7 @@ class AnchorConverter:
         """
         return set(
             self.anchors_exp.findall(self.text)
-            + self.references_exp.findall(self.text)
+            + [a for a, _ in self.references_exp.findall(self.text)]
         )
 
     def to_reference_links(self):
@@ -79,3 +79,29 @@ class AnchorConverter:
             text += f'[{anchor}]: {uri}\n'
 
         return text
+
+    def to_inline_links(self):
+        """Return a copy of the markdown document, where reference links are
+        moved to inline-style links.
+
+        If a reference can't be resolved, it will be kept as-is.
+        """
+        text = self.text
+        inline_matches = self.anchors_exp.finditer(text)
+
+        for match in self.references_exp.finditer(text):
+            anchor, uri = map(str.strip, match.groups())
+
+            for inline_match in inline_matches:
+                if inline_match.group(1) == anchor:
+                    offset = len(text) - len(self.text)
+                    span = (x + offset for x in inline_match.span(1))
+
+                    text = replace_at(span, text, uri)
+
+            # Remove reference-style anchor
+            offset = len(text) - len(self.text)
+            span = (x + offset for x in match.span(0))
+            text = replace_at(span, text, '')
+
+        return text.rstrip('\n') + '\n'
