@@ -44,7 +44,6 @@ class AnchorConverter:
         text = self.text
         uris = {} # Format: {uri: anchor}
         existing_anchors = self.find_anchors()
-        offset = 0
         last_anchor_idx = 0
 
         for match in self.inlines_exp.finditer(text):
@@ -54,7 +53,7 @@ class AnchorConverter:
             # the document changes over iterations. This corrects the span of
             # the matched group to reflect this.
             offset = len(text) - len(self.text)
-            span = map(lambda x: x + offset, match.span(1))
+            span = (x + offset for x in match.span(1))
 
             # If it exists, use the previous anchor for this URI, else generate
             # a new one.
