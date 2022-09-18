@@ -13,7 +13,7 @@ def test_find_existing_anchors():
             == {'article', 'not referenced', 'unused'})
 
 
-def test_convert_anchors():
+def test_convert_to_ref():
     text = (
         "Hello, [this article](uri://hello) looks great.\n"
         "And [this one](uri://other) looks great too.\n"
@@ -29,7 +29,7 @@ def test_convert_anchors():
     )
 
 
-def test_convert_conflicting_anchors():
+def test_convert_to_ref_conflicting():
     text = (
         "Hello, [this article](uri://hello) looks great.\n"
         "And [this one](uri://other) looks great too.\n"
@@ -49,7 +49,7 @@ def test_convert_conflicting_anchors():
     )
 
 
-def test_convert_noop():
+def test_convert_to_ref_noop():
     text = (
         "Hello, (nothing needs converting here) [I mean, really].\n"
         "[A link][ref] to prove it.\n"
@@ -57,3 +57,21 @@ def test_convert_noop():
         "[ref]: something\n"
     )
     assert AnchorConverter(text).to_reference_links() == text
+
+
+def test_convert_to_inline():
+    text = (
+        "Hello, [this article][1] looks great.\n"
+        "And [this one](uri://hello) looks great too.\n"
+        "[The same] [1] again!\n"
+        "And [this][3] goes nowhere.\n"
+        "\n"
+        "[1]: uri://other\n"
+        "[2]: uri://unused\n"
+    )
+    assert AnchorConverter(text).to_inline_links() == (
+        "Hello, [this article][uri://other] looks great.\n"
+        "And [this one](uri://hello) looks great too.\n"
+        "[The same] [uri://other] again!\n"
+        "And [this][3] goes nowhere.\n"
+    )
