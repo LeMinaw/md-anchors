@@ -11,6 +11,18 @@ def replace_at(span, string, pattern):
     return string[:start] + pattern + string[end:]
 
 
+def offset_span(span, inf, sup=None):
+    """Return a copy of the input `span` with offset inferior and superior
+    bounds.
+
+    If a single offset is specified, both bounds will be equally offset.
+    """
+    if sup is None:
+        sup = inf
+
+    return (x + offset for x, offset in zip(span, (inf, sup)))
+
+
 class AnchorConverter:
     """Class allowing to perform anchor conversions operations on a Markdown /
     CommonMark source text.
@@ -53,7 +65,7 @@ class AnchorConverter:
             # the document changes over iterations. This corrects the span of
             # the matched group to reflect this.
             offset = len(text) - len(self.text)
-            span = (x + offset for x in match.span(1))
+            span = offset_span(match.span(1), offset)
 
             # If it exists, use the previous anchor for this URI, else generate
             # a new one.
@@ -86,7 +98,7 @@ class AnchorConverter:
         If a reference can't be resolved, it will be kept as-is.
         """
         text = self.text
-        inline_matches = self.anchors_exp.finditer(text)
+        inline_matches = tuple(self.anchors_exp.finditer(text))
 
         for match in self.references_exp.finditer(text):
             anchor, uri = map(str.strip, match.groups())
@@ -94,13 +106,13 @@ class AnchorConverter:
             for inline_match in inline_matches:
                 if inline_match.group(1) == anchor:
                     offset = len(text) - len(self.text)
-                    span = (x + offset for x in inline_match.span(1))
+                    span = offset_span(
+                        inline_match.span(1), offset - 1, offset + 1
+                    )
 
-                    text = replace_at(span, text, uri)
+                    text = replace_at(span, text, f"({uri})")
 
-            # Remove reference-style anchor
-            offset = len(text) - len(self.text)
-            span = (x + offset for x in match.span(0))
-            text = replace_at(span, text, '')
+        # Remove reference-style anchor
+        text = re.sub(self.references_exp, '', text)
 
         return text.rstrip('\n') + '\n'

@@ -64,14 +64,26 @@ def test_convert_to_inline():
         "Hello, [this article][1] looks great.\n"
         "And [this one](uri://hello) looks great too.\n"
         "[The same] [1] again!\n"
-        "And [this][3] goes nowhere.\n"
+        "And [this][10] goes nowhere.\n"
+        "A [last one][2].\n"
         "\n"
-        "[1]: uri://other\n"
-        "[2]: uri://unused\n"
+        "[1]: uri://hi\n"
+        "[2]: uri://other\n"
+        "[3]: uri://unused\n"
     )
     assert AnchorConverter(text).to_inline_links() == (
-        "Hello, [this article][uri://other] looks great.\n"
+        "Hello, [this article](uri://hi) looks great.\n"
         "And [this one](uri://hello) looks great too.\n"
-        "[The same] [uri://other] again!\n"
-        "And [this][3] goes nowhere.\n"
+        "[The same] (uri://hi) again!\n"
+        "And [this][10] goes nowhere.\n"
+        "A [last one](uri://other).\n"
     )
+
+
+def test_convert_to_inline_noop():
+    text = (
+        "Hello, (nothing needs converting here) (I mean, really).\n"
+        "[A link](something) to prove it.\n"
+        "Plus [this][ref].\n"
+    )
+    assert AnchorConverter(text).to_inline_links() == text
