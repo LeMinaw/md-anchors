@@ -87,3 +87,28 @@ def test_convert_to_inline_noop():
         "Plus [this][ref].\n"
     )
     assert AnchorConverter(text).to_inline_links() == text
+
+
+def test_get_uris():
+    text = (
+        "Hello, [this article][1] looks great.\n"
+        "And [this one](uri://hello) looks great too.\n"
+        "\n"
+        "[1]: uri://hi\n"
+        "[2]: uri://other\n"
+        "[3]: uri://unused\n"
+    )
+    assert AnchorConverter(text).uris == {
+        "uri://hello",
+        "uri://hi",
+        "uri://other",
+        "uri://unused"
+    }
+
+
+def test_get_uris_none():
+    text = (
+        "Hello, (no uris here) [I mean, really].\n"
+        "[A link][ref] to nothing.\n"
+    )
+    assert AnchorConverter(text).uris == set()

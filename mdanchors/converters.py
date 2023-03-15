@@ -28,14 +28,34 @@ class AnchorConverter:
     CommonMark source text.
     """
     # Match inline URIs
-    inlines_exp = re.compile(r'\[[^()[\]]*\]\s?(\([^()[\]]+\))')
+    inlines_exp = re.compile(r'\[[^()[\]]*\]\s?\((?P<uri>[^()[\]]+)\)')
     # Match inline anchors identifiers
-    anchors_exp = re.compile(r'\[[^()[\]]*\]\s?\[([^()[\]]+)\]')
+    anchors_exp = re.compile(r'\[[^()[\]]*\]\s?\[(?P<ref>[^()[\]]+)\]')
     # Match reference-style anchors
-    references_exp = re.compile(r'^\s*\[([^()[\]]+)\]\s*:(.*)$', re.M)
+    references_exp = re.compile(
+        r'^\s*\[(?P<ref>[^()[\]]+)\]\s*:\s*(?P<uri>.*)$', re.M
+    )
 
     def __init__(self, text):
         self.text = text
+
+    @property
+    def uris(self):
+        """Get a set of all URIs of the markdown document, both inline or
+        reference-style.
+
+        Unused references will also be returned.
+        """
+        return self._find_inline_uris() | self._find_ref_uris()
+
+    def _find_inline_uris(self):
+        return set(self.inlines_exp.findall(self.text))
+
+    def _find_ref_uris(self):
+        return set(
+            match.group('uri')
+            for match in self.references_exp.finditer(self.text)
+        )
 
     def find_anchors(self):
         """Get a set of all existing reference-style anchor identifiers in the
@@ -46,7 +66,7 @@ class AnchorConverter:
         """
         return set(
             self.anchors_exp.findall(self.text)
-            + [a for a, _ in self.references_exp.findall(self.text)]
+            + [m.group('ref') for m in self.references_exp.finditer(self.text)]
         )
 
     def to_reference_links(self):
@@ -59,13 +79,14 @@ class AnchorConverter:
         last_anchor_idx = 0
 
         for match in self.inlines_exp.finditer(text):
-            tag = match.group(1)
-            uri = tag.strip('()')
+            uri = match.group('uri')
             # Because links are replaced by anchors identifiers, the length of
             # the document changes over iterations. This corrects the span of
             # the matched group to reflect this.
             offset = len(text) - len(self.text)
             span = offset_span(match.span(1), offset)
+            # Correct the span to take into account starting `(` and ending `)`
+            span = offset_span(span, -1, 1)
 
             # If it exists, use the previous anchor for this URI, else generate
             # a new one.
@@ -104,7 +125,7 @@ class AnchorConverter:
             anchor, uri = map(str.strip, match.groups())
 
             for inline_match in inline_matches:
-                if inline_match.group(1) == anchor:
+                if inline_match.group('ref') == anchor:
                     offset = len(text) - len(self.text)
                     span = offset_span(
                         inline_match.span(1), offset - 1, offset + 1
