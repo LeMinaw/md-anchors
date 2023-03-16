@@ -33,7 +33,7 @@ class AnchorConverter:
     anchors_exp = re.compile(r'\[[^()[\]]*\]\s?\[(?P<ref>[^()[\]]+)\]')
     # Match reference-style anchors
     references_exp = re.compile(
-        r'^\s*\[(?P<ref>[^()[\]]+)\]\s*:\s*(?P<uri>.*)$', re.M
+        r'^\s*\[(?P<ref>[^()[\]]+)\]\s*:\s*(?P<uri>[^\r\n]*)\s*$', re.M
     )
 
     def __init__(self, text):
@@ -53,7 +53,7 @@ class AnchorConverter:
 
     def _find_ref_uris(self):
         return set(
-            match.group('uri')
+            match.group('uri').strip()  # This will remove trailing
             for match in self.references_exp.finditer(self.text)
         )
 

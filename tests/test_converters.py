@@ -106,6 +106,16 @@ def test_get_uris():
     }
 
 
+def test_get_crlf():
+    text = (
+        "Hello, [inline link][1], [inline link][2].\r\n"
+        "\r\n"
+        "[1]: uri://hi\r\n"
+        "[2]: uri://other\r\n"
+    )
+    assert AnchorConverter(text).uris == { "uri://hi", "uri://other" }
+
+
 def test_get_uris_none():
     text = (
         "Hello, (no uris here) [I mean, really].\n"
