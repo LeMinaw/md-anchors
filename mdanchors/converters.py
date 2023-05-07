@@ -28,7 +28,7 @@ class AnchorConverter:
     CommonMark source text.
     """
     # Match inline URIs
-    inlines_exp = re.compile(r'\[[^()[\]]*\]\s?\((?P<uri>[^()[\]]+)\)')
+    inlines_exp = re.compile(r'[^]]\s*\[[^()[\]]*\]\s?\((?P<uri>[^()[\]]+)\)')
     # Match inline anchors identifiers
     anchors_exp = re.compile(r'\[[^()[\]]*\]\s?\[(?P<ref>[^()[\]]+)\]')
     # Match reference-style anchors

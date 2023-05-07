@@ -106,7 +106,18 @@ def test_get_uris():
     }
 
 
-def test_get_crlf():
+def test_get_uris_brakets():
+    text = (
+        "Hello, [something][1] (some more info).\n"
+        "Some [other stuff][2][hey].\n"
+        "\n"
+        "[1]: uri://hello\n"
+        "[2]: uri://other\n"
+    )
+    assert AnchorConverter(text).uris == { "uri://hello", "uri://other" }
+
+
+def test_get_uris_crlf():
     text = (
         "Hello, [inline link][1], [inline link][2].\r\n"
         "\r\n"
